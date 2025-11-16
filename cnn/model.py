@@ -7,9 +7,9 @@ import config
 class Generator(nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(in_features=100, out_features=1024 * 7 * 7)
+        self.fc1 = nn.Linear(in_features=100, out_features=256 * 7 * 7)
         self.layers = nn.Sequential(
-            nn.ConvTranspose2d(in_channels=1024, out_channels=512, kernel_size=4, stride=2, padding=1),  #7x7 -> 14x14
+            nn.ConvTranspose2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1),  #7x7 -> 14x14
             nn.BatchNorm2d(num_features=512),
             nn.ReLU(),
             nn.ConvTranspose2d(in_channels=512, out_channels=1, kernel_size=4, stride=2, padding=1), # 14x14 -> 28x28
@@ -18,7 +18,7 @@ class Generator(nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        x = x.view(-1, 1024, 7, 7)
+        x = x.view(-1, 256, 7, 7)
         x = self.layers(x)
         return x
 
