@@ -23,7 +23,7 @@ class Generator(nn.Module):
         return x
 
     def generate(self):
-        z = torch.randn(1, 100)
+        z = torch.randn(1, 100, device=config.DEVICE)
         self.eval()
         with torch.no_grad():
             output = self(z)
@@ -61,17 +61,18 @@ class GAN(nn.Module):
         train_gen_losses, train_disc_losses = [], []
         for epoch in range(epochs):
             epoch_gen_loss, epoch_disc_loss = 0, 0
-            for x, in train_loader:
+            for x, _ in train_loader:
+                x = x.to(config.DEVICE)
                 batch_size = x.size(0)
-                real_labels = torch.ones(batch_size, 1) * 0.9  # avoid using straight up 1 for real labels, use 0.9
-                fake_labels = torch.zeros(batch_size, 1) + 0.1  # avoid using straight up 0 for fake labels, use 0.1
+                real_labels = torch.full((batch_size, 1), 0.9, device=config.DEVICE)  # avoid using straight up 1 for real labels, use 0.9
+                fake_labels = torch.full((batch_size, 1), 0.1, device=config.DEVICE) # avoid using straight up 0 for fake labels, use 0.1
 
                 #Discriminator training
                 self.disc.train()
                 real_disc_preds = self.disc(x)
                 real_disc_loss = self.disc_loss(real_disc_preds, real_labels)
 
-                z_disc = torch.randn(batch_size, 100) #generate noise vector
+                z_disc = torch.randn(batch_size, 100, device=config.DEVICE) #generate noise vector
                 fake_images_for_disc = self.gen(z_disc)
                 fake_images_preds_for_disc = self.disc(fake_images_for_disc.detach())
                 fake_disc_loss = self.disc_loss(fake_images_preds_for_disc, fake_labels)
@@ -83,7 +84,7 @@ class GAN(nn.Module):
 
                 #Generator training
                 self.gen.train()
-                z_gen = torch.randn(batch_size, 100)
+                z_gen = torch.randn(batch_size, 100, device=config.DEVICE)
                 fake_images_for_gen = self.gen(z_gen)
                 fake_images_preds_for_gen = self.disc(fake_images_for_gen)
 

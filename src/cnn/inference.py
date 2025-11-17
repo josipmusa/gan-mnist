@@ -18,6 +18,7 @@ def generate_and_save(model, idx):
 
 def main():
     model = Generator()
+    model.to(config.DEVICE)
     if not config.MODEL_PATH.exists():
         raise FileNotFoundError(f"Model not found: {config.MODEL_PATH}")
     model.load_state_dict(torch.load(config.MODEL_PATH))
