@@ -6,11 +6,12 @@ from model import GAN
 
 
 def _prepare_training_data():
+    data_dir = config.SCRIPT_DIR.parent.parent / "data"
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))  # maps [0,1] → [-1,1]
     ])
-    mnist_train = datasets.MNIST(root='../../data', train=True, download=True, transform=transform)
+    mnist_train = datasets.MNIST(root=data_dir, train=True, download=True, transform=transform)
     data_loader = DataLoader(mnist_train, config.BATCH_SIZE, shuffle=True)
     return data_loader
 

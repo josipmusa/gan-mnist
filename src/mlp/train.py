@@ -5,11 +5,12 @@ import config
 
 
 def _prepare_training_data():
+    data_dir = config.SCRIPT_DIR.parent.parent / "data"
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))  # maps [0,1] → [-1,1]
     ])
-    mnist_train = datasets.MNIST(root='../data', train=True, download=True, transform=transform)
+    mnist_train = datasets.MNIST(root=data_dir, train=True, download=True, transform=transform)
     X_train = mnist_train.data.unsqueeze(1).float()
     X_train = X_train.view(X_train.shape[0], -1)
     dataset = TensorDataset(X_train)

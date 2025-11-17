@@ -1,3 +1,5 @@
+import time
+
 import torch
 from matplotlib import pyplot as plt
 from torch import nn, optim
@@ -7,18 +9,20 @@ import config
 class Generator(nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(in_features=100, out_features=256 * 7 * 7)
+        self.fc1 = nn.Linear(in_features=100, out_features=128 * 7 * 7)
         self.layers = nn.Sequential(
-            nn.ConvTranspose2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1),  #7x7 -> 14x14
+            nn.ConvTranspose2d(in_channels=128, out_channels=256, kernel_size=4, stride=2, padding=1),  # 7x7 -> 14x14
+            nn.BatchNorm2d(num_features=256),
+            nn.ConvTranspose2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1),  #14x14 -> 28x28
             nn.BatchNorm2d(num_features=512),
             nn.ReLU(),
-            nn.ConvTranspose2d(in_channels=512, out_channels=1, kernel_size=4, stride=2, padding=1), # 14x14 -> 28x28
+            nn.ConvTranspose2d(in_channels=512, out_channels=1, kernel_size=3, stride=1, padding=1), # 28x28 -> 28x28
             nn.Tanh()
         )
 
     def forward(self, x):
         x = self.fc1(x)
-        x = x.view(-1, 256, 7, 7)
+        x = x.view(-1, 128, 7, 7)
         x = self.layers(x)
         return x
 
@@ -52,13 +56,14 @@ class GAN(nn.Module):
         super().__init__()
         self.gen = Generator()
         self.disc = Discriminator()
-        self.gen_optimizer = optim.Adam(self.gen.parameters(), lr=0.0002, betas=(0.5, 0.999))
+        self.gen_optimizer = optim.Adam(self.gen.parameters(), lr=0.0003, betas=(0.5, 0.999))
         self.disc_optimizer = optim.Adam(self.disc.parameters(), lr=0.0002, betas=(0.5, 0.999))
         self.gen_loss = nn.BCEWithLogitsLoss()
         self.disc_loss = nn.BCEWithLogitsLoss()
 
-    def fit(self, train_loader, epochs = 20):
+    def fit(self, train_loader, epochs):
         train_gen_losses, train_disc_losses = [], []
+        start_time = time.time()
         for epoch in range(epochs):
             epoch_gen_loss, epoch_disc_loss = 0, 0
             for x, _ in train_loader:
@@ -102,6 +107,8 @@ class GAN(nn.Module):
             train_gen_losses.append(avg_gen_loss)
             print(f"Epoch {epoch}, Disc loss: {avg_disc_loss: .4f}, Gen loss: {avg_gen_loss: .4f}")
 
+        end_time = time.time()
+        print(f"Model finished training in {(end_time - start_time): .4f} seconds")
         torch.save(self.gen.state_dict(), config.MODEL_PATH)
         _plot_loss_curve(train_disc_losses, train_gen_losses)
 
